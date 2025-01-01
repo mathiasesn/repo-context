@@ -5,6 +5,7 @@
 [![Quality Check](https://github.com/mathiasesn/repo-context/actions/workflows/check.yaml/badge.svg?branch=master)](https://github.com/mathiasesn/repo-context/actions/workflows/check.yaml)
 [![Unit Tests](https://github.com/mathiasesn/repo-context/actions/workflows/test.yaml/badge.svg)](https://github.com/mathiasesn/repo-context/actions/workflows/test.yaml)
 ![code coverage](https://raw.githubusercontent.com/mathiasesn/repo-context/coverage-badge/coverage.svg?raw=true)
+[![Publish](https://github.com/mathiasesn/repo-context/actions/workflows/publish.yaml/badge.svg)](https://github.com/mathiasesn/repo-context/actions/workflows/publish.yaml)
 
 Convert Git repositories into LLM-friendly context format. This tool processes local repositories or GitHub URLs and generates a formatted file suitable for use with Large Language Models.
 
