@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/mediacatch
+      url: https://pypi.org/p/repo-context
     permissions:
       id-token: write
     steps:
