@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from repo_context.repo_converter import RepoConverter
 
-logger = logging.getLogger("repo-context.cli")
+logger = logging.getLogger("repo_context.cli")
 
 
 def parse_args() -> Namespace:
@@ -29,7 +29,31 @@ def parse_args() -> Namespace:
         "--ignore",
         type=str,
         nargs="+",
-        default=[".git", "__pycache__", "*.pyc", "*.pyo", "*.pyd", ".DS_Store"],
+        default=[
+            "**/.gitignore",
+            "**/.git/**",
+            "**/.gitattributes",
+            "**/.gitmodules",
+            ".git",
+            "__pycache__",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
+            ".DS_Store",
+            "**/uv.lock",
+            "**/poetry.lock",
+            "**/.venv",
+            "**/.vscode",
+            "**/.idea",
+            "node_modules",
+            "build",
+            "dist",
+            "target",
+            "**/.vs",
+            "bin",
+            "obj",
+            "publish",
+        ],
         help="Patterns to ignore",
     )
     parser.add_argument(
@@ -57,7 +81,7 @@ def main():
     try:
         if urlparse(args.source).scheme:
             logger.info(f"Cloning repository from {args.source}")
-            repo_path = converter.clone_repo(args.source)
+            repo_path, _ = converter.clone_repo(args.source)
         else:
             repo_path = Path(args.source)
 

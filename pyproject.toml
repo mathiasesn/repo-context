@@ -3,10 +3,23 @@ name = "repo-context"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "gitpython>=3.1.43",
     "python-dotenv>=1.0.1",
     "rich>=13.9.4",
     "tqdm>=4.67.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "ruff>=0.8.4",
+]
+
+[project.scripts]
+repo-context = "repo_context.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
