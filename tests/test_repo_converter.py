@@ -66,6 +66,7 @@ def test_process_file(converter, temp_repo):
 
     assert converter._process_file(temp_repo / "empty.txt", temp_repo) is None
 
+
 def test_convert(converter, temp_repo):
     result = converter.convert(temp_repo)
     assert "test.txt" in result
