@@ -68,14 +68,12 @@ context = converter.convert("/path/to/repo")
 The tool generates a Markdown file with the following structure:
 ```markdown
 # File: path/to/file1
-```
+
 [file1 content]
-```
 
 # File: path/to/file2
-```
+
 [file2 content]
-```
 ```
 
 ## Development
