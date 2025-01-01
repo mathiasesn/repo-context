@@ -1,0 +1,108 @@
+# repo-context
+
+Convert Git repositories into LLM-friendly context format. This tool processes local repositories or GitHub URLs and generates a formatted file suitable for use with Large Language Models.
+
+## Features
+
+- Process local Git repositories or GitHub URLs
+- Configurable file ignore patterns
+- Progress tracking with rich console output
+- Markdown-formatted output optimized for LLM context
+- Built with UV package manager support
+
+## Installation
+
+Using UV:
+```bash
+uv venv
+uv pip install repo-context
+```
+
+From source:
+```bash
+git clone https://github.com/mathiasesn/repo2context
+cd repo2context
+uv venv
+uv pip install -e .
+```
+
+## Usage
+
+### Command Line Interface
+
+Basic usage:
+```bash
+repo2context /path/to/local/repo
+repo2context https://github.com/username/repo
+```
+
+Options:
+```bash
+repo2context --help
+usage: repo2context [-h] [--output OUTPUT] [--ignore IGNORE [IGNORE ...]] source
+
+Convert a repository into LLM-friendly context
+
+positional arguments:
+  source                Local path or GitHub URL to repository
+
+options:
+  -h, --help            show this help message and exit
+  --output OUTPUT, -o OUTPUT
+                        Output file path (default: context.md)
+  --ignore IGNORE [IGNORE ...]
+                        Patterns to ignore (default: ['.git', '__pycache__', '*.pyc', '*.pyo', '*.pyd', '.DS_Store'])
+```
+
+### Python API
+
+```python
+from repo2context import RepoConverter
+
+converter = RepoConverter(ignore_patterns=[".git", "*.pyc"])
+context = converter.convert("/path/to/repo")
+```
+
+## Output Format
+
+The tool generates a Markdown file with the following structure:
+```markdown
+# File: path/to/file1
+```
+[file1 content]
+```
+
+# File: path/to/file2
+```
+[file2 content]
+```
+```
+
+## Development
+
+Requirements:
+- Python >=3.12
+- UV package manager
+
+Setup development environment:
+```bash
+uv venv
+uv pip install -e ".[dev]"
+```
+
+Run tests:
+```bash
+pytest tests/
+```
+
+## License
+
+MIT License
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
