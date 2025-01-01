@@ -53,6 +53,10 @@ def parse_args() -> Namespace:
             "bin",
             "obj",
             "publish",
+            "**/LICENSE",
+            "**/.python-version",
+            "**/tests/**",
+            "**/test/**",
         ],
         help="Patterns to ignore",
     )
