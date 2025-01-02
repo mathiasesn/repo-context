@@ -27,8 +27,8 @@ uv pip install repo-context
 
 From source:
 ```bash
-git clone https://github.com/mathiasesn/repo2context
-cd repo2context
+git clone https://github.com/mathiasesn/repo-context
+cd repo-context
 uv venv
 uv pip install -e .
 ```
@@ -39,14 +39,14 @@ uv pip install -e .
 
 Basic usage:
 ```bash
-repo2context /path/to/local/repo
-repo2context https://github.com/username/repo
+repo-context /path/to/local/repo
+repo-context https://github.com/username/repo
 ```
 
 Options:
 ```bash
-repo2context --help
-usage: repo2context [-h] [--output OUTPUT] [--ignore IGNORE [IGNORE ...]] source
+repo-context --help
+usage: repo-context [-h] [--output OUTPUT] [--ignore IGNORE [IGNORE ...]] source
 
 Convert a repository into LLM-friendly context
 
@@ -64,7 +64,7 @@ options:
 ### Python API
 
 ```python
-from repo2context import RepoConverter
+from repo-context import RepoConverter
 
 converter = RepoConverter(ignore_patterns=[".git", "*.pyc"])
 context = converter.convert("/path/to/repo")
