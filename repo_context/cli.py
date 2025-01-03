@@ -22,8 +22,8 @@ def parse_args() -> Namespace:
         "--output",
         "-o",
         type=str,
-        default="context.md",
-        help="Output file path",
+        default=".",
+        help="Output directory",
     )
     parser.add_argument(
         "--ignore",
@@ -35,6 +35,12 @@ def parse_args() -> Namespace:
         "--ignore-file",
         type=str,
         help="File containing ignore patterns (one per line)",
+    )
+    parser.add_argument(
+        "--max-file-lines",
+        type=int,
+        default=None,
+        help="Maximum number of lines in context files",
     )
     args = parser.parse_args()
     return args
@@ -60,11 +66,12 @@ def main():
         else:
             repo_path = Path(args.source)
 
-        context = converter.convert(repo_path)
+        context = converter.convert(repo_path, max_file_lines=args.max_file_lines)
 
-        output_path = Path(args.output)
-        output_path.write_text(context)
-        logger.info(f"Context written to {output_path}")
+        for i, c in enumerate(context):
+            output_path = Path(f"{args.output}/context_{i}.md")
+            output_path.write_text(c)
+            logger.info(f"Context written to {output_path}")
 
     except Exception as e:
         logger.error(f"Error: {e}")
