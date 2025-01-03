@@ -29,35 +29,6 @@ def parse_args() -> Namespace:
         "--ignore",
         type=str,
         nargs="+",
-        default=[
-            "**/.gitignore",
-            "**/.git/**",
-            "**/.gitattributes",
-            "**/.gitmodules",
-            ".git",
-            "__pycache__",
-            "*.pyc",
-            "*.pyo",
-            "*.pyd",
-            ".DS_Store",
-            "**/uv.lock",
-            "**/poetry.lock",
-            "**/.venv",
-            "**/.vscode",
-            "**/.idea",
-            "node_modules",
-            "build",
-            "dist",
-            "target",
-            "**/.vs",
-            "bin",
-            "obj",
-            "publish",
-            "**/LICENSE",
-            "**/.python-version",
-            "**/tests/**",
-            "**/test/**",
-        ],
         help="Patterns to ignore",
     )
     parser.add_argument(
@@ -74,13 +45,13 @@ def main():
     args = parse_args()
 
     # Concat ignore patterns
-    ignore_patterns = args.ignore.copy()
+    ignore_patterns = args.ignore.copy() if args.ignore else []
     if args.ignore_file:
         with open(args.ignore_file) as f:
             ignore_patterns.extend(line.strip() for line in f if line.strip())
 
     # Create the repo converter
-    converter = RepoConverter(ignore_patterns=args.ignore)
+    converter = RepoConverter(ignore_patterns=ignore_patterns)
 
     try:
         if urlparse(args.source).scheme:
