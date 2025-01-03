@@ -85,7 +85,7 @@ def test_process_file(converter, temp_repo):
 
 
 def test_convert(converter, temp_repo):
-    result = converter.convert(temp_repo)
+    result = converter.convert(temp_repo)[0]
     assert "file.txt" in result
     assert "test content" in result
     assert "empty.txt" not in result
@@ -96,3 +96,98 @@ def test_convert(converter, temp_repo):
 def test_convert_nonexistent_path(converter):
     with pytest.raises(FileNotFoundError):
         converter.convert(Path("nonexistent"))
+
+
+def test_empty_context(converter):
+    result = converter._split_context([], 100)
+    assert result == []
+
+
+def test_single_chunk(converter):
+    context = [
+        "# File: test1.py\n```\nprint('hello')\n```\n",
+        "# File: test2.py\n```\nprint('world')\n```\n",
+    ]
+    result = converter._split_context(context, 10)
+    assert len(result) == 1
+    assert result[0] == "\n".join(context)
+
+
+def test_multiple_chunks(converter):
+    context = [
+        "# File: test1.py\n```\nline1\nline2\n```\n",  # 4 lines
+        "# File: test2.py\n```\nline1\nline2\n```\n",  # 4 lines
+        "# File: test3.py\n```\nline1\nline2\nline3\n```\n",  # 6 lines
+    ]
+    result = converter._split_context(context, 10)
+    assert len(result) == 2
+    # First chunk should contain first and second files (8 lines total)
+    assert result[0] == "\n".join([context[0], context[1]])
+    # Second chunk should contain third file (6 lines)
+    assert result[1] == context[2]
+
+
+def test_exact_chunk_size(converter):
+    context = [
+        "# File: test1.py\n```\nline1\n```\n",  # 4 lines
+        "# File: test2.py\n```\nline1\n```\n",  # 4 lines
+    ]
+    result = converter._split_context(context, 4)
+    assert len(result) == 2
+    assert result[0] == context[0]
+    assert result[1] == context[1]
+
+
+def test_large_single_file(converter):
+    large_file = "# File: large.py\n```\n" + "line\n" * 10 + "```\n"
+    result = converter._split_context([large_file], 5)
+    assert len(result) == 1
+    assert result[0] == large_file
+
+
+def test_mixed_file_sizes(converter):
+    context = [
+        "# File: small1.py\n```\nline1\n```\n",  # 4 lines
+        "# File: large.py\n```\n" + "line\n" * 8 + "```\n",  # 11 lines
+        "# File: small2.py\n```\nline1\n```\n",  # 4 lines
+    ]
+    result = converter._split_context(context, 6)
+    assert len(result) == 3
+    assert result[0] == context[0]
+    assert result[1] == context[1]
+    assert result[2] == context[2]
+
+
+def test_zero_max_lines(converter):
+    context = ["# File: test.py\n```\nline1\n```\n"]
+    with pytest.raises(ValueError):
+        converter._split_context(context, 0)
+
+
+def test_negative_max_lines(converter):
+    context = ["# File: test.py\n```\nline1\n```\n"]
+    with pytest.raises(ValueError):
+        converter._split_context(context, -5)
+
+
+def test_newline_counting(converter):
+    context = [
+        "# File: test1.py\n```\nline1\r\nline2\rline3\n```\n",  # Mixed newlines
+        "# File: test2.py\n```\nline1\nline2\n```\n",  # Unix newlines
+    ]
+    result = converter._split_context(context, 5)
+    assert len(result) == 2
+    assert result[0] == context[0]
+    assert result[1] == context[1]
+
+
+def test_preserve_file_boundaries(converter):
+    context = [
+        "# File: test1.py\n```\nline1\nline2\n```\n",  # 5 lines
+        "# File: test2.py\n```\nline1\nline2\n```\n",  # 5 lines
+        "# File: test3.py\n```\nline1\nline2\n```\n",  # 5 lines
+    ]
+    result = converter._split_context(context, 7)
+    assert len(result) == 3
+    # Each file should be in its own chunk
+    assert all(chunk == original for chunk, original in zip(result, context))

@@ -132,14 +132,16 @@ class RepoConverter:
         file_path, repo_path = args
         return self._process_file(Path(file_path), Path(repo_path))
 
-    def convert(self, repo_path: Path) -> str:
+    def convert(self, repo_path: Path, max_file_lines: int | None = None) -> list[str]:
         """Convert repository to LLM-friendly context format.
 
         Args:
-            repo_path: Path to repository root
+            repo_path (Path): Path to repository root
+            max_file_lines (int | None): Maximum number of lines in context file.
+                If set, the context files will be split. Defaults to None.
 
         Returns:
-            Formatted string containing repository content
+            list[str]: List of context strings
 
         Raises:
             FileNotFoundError: If repo_path doesn't exist
@@ -169,7 +171,12 @@ class RepoConverter:
                             context.append(result)
                         pbar.update()
 
-        return "\n".join(context)
+        if max_file_lines:
+            context = self._split_context(context, max_file_lines)
+        else:
+            context = ["\n".join(context)]
+
+        return context
 
     def _is_valid_file(self, path: Path) -> bool:
         """Check if file should be processed."""
@@ -178,6 +185,45 @@ class RepoConverter:
             and not self.should_ignore(path)
             and path.stat().st_size <= self.max_file_size
         )
+
+    def _split_context(self, context: list[str], max_file_lines: int) -> list[str]:
+        """
+        Splits a list of strings into chunks where each chunk has a maximum number of lines.
+
+        Args:
+            context (list[str]): The list of strings to be split.
+            max_file_lines (int): The maximum number of lines allowed in each chunk.
+
+        Returns:
+            list[str]: A list of strings where each string is a chunk of the original context,
+                       and each chunk has at most `max_file_lines` lines.
+        """
+        if max_file_lines < 1:
+            raise ValueError("max_file_lines must be greater than 0")
+
+        chunks = []
+        current_chunk = []
+        current_line_count = 0
+
+        for c in context:
+            # Count lines in the current result
+            result_lines = c.count("\n")
+
+            # If adding this result would exceed the limit, start a new chunk
+            if current_line_count + result_lines > max_file_lines and current_chunk:
+                chunks.append("\n".join(current_chunk))
+                current_chunk = []
+                current_line_count = 0
+
+            # Add the result to the current chunk
+            current_chunk.append(c)
+            current_line_count += result_lines
+
+        # Add the last chunk if it's not empty
+        if current_chunk:
+            chunks.append("\n".join(current_chunk))
+
+        return chunks
 
     def _process_file(self, file_path: Path, repo_path: Path) -> str | None:
         """
