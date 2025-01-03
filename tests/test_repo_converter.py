@@ -6,6 +6,7 @@ import git
 import pytest
 
 from repo_context import RepoConverter
+from repo_context.ignore import EXTENSIONS, FILES, PATTERNS
 
 
 @pytest.fixture
@@ -14,7 +15,7 @@ def temp_repo():
     _ = git.Repo.init(temp_dir)
 
     # Create test files
-    (temp_dir / "test.txt").write_text("test content")
+    (temp_dir / "file.txt").write_text("test content")
     (temp_dir / "empty.txt").write_text("")
     (temp_dir / "large.txt").write_text("x" * 2_000_000)
     (temp_dir / ".gitignore").write_text("*.ignored")
@@ -31,7 +32,7 @@ def converter():
 
 def test_init_default():
     converter = RepoConverter()
-    assert converter.ignore_patterns == []
+    assert converter.ignore_patterns == FILES + EXTENSIONS + PATTERNS
     assert converter.max_file_size == 1_000_000
 
 
@@ -46,6 +47,22 @@ def test_clone_repo_invalid_url(converter):
 
 
 def test_should_ignore():
+    converter = RepoConverter()
+
+    assert converter.should_ignore(Path(".gitignore"))
+    assert converter.should_ignore(Path("some/path/.gitignore"))
+
+    assert converter.should_ignore(Path("image.png"))
+    assert converter.should_ignore(Path("deep/path/image.png"))
+
+    assert converter.should_ignore(Path(".git/config"))
+    assert converter.should_ignore(Path("some/path/.git/config"))
+
+    assert not converter.should_ignore(Path("regular.txt"))
+    assert not converter.should_ignore(Path("src/main.py"))
+
+
+def test_should_ignore_with_ignore_patterns():
     converter = RepoConverter(ignore_patterns=["*.pyc", "test/*"])
     assert converter.should_ignore(Path("file.pyc"))
     assert converter.should_ignore(Path("test/file.py"))
@@ -53,15 +70,15 @@ def test_should_ignore():
 
 
 def test_is_valid_file(converter, temp_repo):
-    assert converter._is_valid_file(temp_repo / "test.txt")
+    assert converter._is_valid_file(temp_repo / "file.txt")
     assert not converter._is_valid_file(temp_repo / "large.txt")
     assert not converter._is_valid_file(temp_repo / "test.ignored")
     assert not converter._is_valid_file(temp_repo)
 
 
 def test_process_file(converter, temp_repo):
-    result = converter._process_file(temp_repo / "test.txt", temp_repo)
-    assert "# File: test.txt" in result
+    result = converter._process_file(temp_repo / "file.txt", temp_repo)
+    assert "# File: file.txt" in result
     assert "test content" in result
 
     assert converter._process_file(temp_repo / "empty.txt", temp_repo) is None
@@ -69,7 +86,7 @@ def test_process_file(converter, temp_repo):
 
 def test_convert(converter, temp_repo):
     result = converter.convert(temp_repo)
-    assert "test.txt" in result
+    assert "file.txt" in result
     assert "test content" in result
     assert "empty.txt" not in result
     assert "large.txt" not in result

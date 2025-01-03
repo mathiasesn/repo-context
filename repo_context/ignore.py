@@ -1,0 +1,47 @@
+FILES = [
+    ".gitignore",
+    ".gitattributes",
+    ".gitmodules",
+    ".git",
+    "LICENSE",
+    ".python-version",
+    "uv.lock",
+    "poetry.lock",
+    ".dockerignore",
+]
+
+EXTENSIONS = [
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.svg",
+    "*.ico",
+    "*.woff",
+    "*.woff2",
+    "*.ttf",
+    "*.eot",
+    "*.otf",
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    ".DS_Store",
+]
+
+PATTERNS = [
+    ".git",
+    ".venv",
+    ".vscode",
+    ".idea",
+    "node_modules",
+    "build",
+    "dist",
+    "target",
+    ".vs",
+    "bin",
+    "obj",
+    "publish",
+    "tests",
+    "test",
+]
