@@ -64,12 +64,13 @@ def main():
         if urlparse(args.source).scheme:
             logger.info(f"Cloning repository from {args.source}")
             repo_path, _ = converter.clone_repo(args.source)
+            fname = Path(urlparse(args.source).path).stem
         else:
             repo_path = Path(args.source)
+            fname = repo_path.stem
 
         # Convert repository to context
         context = converter.convert(repo_path, max_file_lines=args.max_file_lines)
-        fname = repo_path.stem
 
         # Write context to files
         if len(context) == 1:
