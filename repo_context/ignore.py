@@ -8,6 +8,8 @@ FILES = [
     "uv.lock",
     "poetry.lock",
     ".dockerignore",
+    ".coverage",
+    ".pre-commit-config.yaml",
 ]
 
 EXTENSIONS = [
@@ -27,6 +29,11 @@ EXTENSIONS = [
     "*.pyo",
     "*.pyd",
     ".DS_Store",
+    "*.zip",
+    "*.far",
+    "*.fst",
+    "*.tsv",
+    "*.csv",
 ]
 
 PATTERNS = [
@@ -44,4 +51,5 @@ PATTERNS = [
     "publish",
     "tests",
     "test",
+    ".ruff_cache",
 ]

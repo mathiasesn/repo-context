@@ -9,6 +9,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 from repo_context.ignore import EXTENSIONS, FILES, PATTERNS
 from repo_context.utils import should_ignore
+from repo_context.structure import RepoStructure
 
 logger = logging.getLogger("repo_context.repo_converter")
 
@@ -20,11 +21,25 @@ class RepoConverter:
         max_file_size: int = 1_000_000,
         max_workers: int | None = None,
     ) -> None:
+        """
+        Initialize the converter with specified parameters.
+
+        Args:
+            ignore_patterns (list[str] | None, optional): A list of patterns to ignore. Defaults to None.
+            max_file_size (int, optional): The maximum file size to process in bytes. Defaults to 1,000,000.
+            max_workers (int | None, optional): The maximum number of worker threads to use. Defaults to the number of CPU cores.
+
+        Attributes:
+            ignore_patterns (list[str]): The list of patterns to ignore.
+            max_file_size (int): The maximum file size to process in bytes.
+            max_workers (int): The maximum number of worker threads to use.
+            structure (RepoStructure): The repository structure initialized with the ignore patterns.
+        """
         self.ignore_patterns = ignore_patterns or []
         self.max_file_size = max_file_size
         self.max_workers = max_workers or cpu_count()
-
         self.ignore_patterns += FILES + EXTENSIONS + PATTERNS
+        self.structure = RepoStructure(ignore_patterns=self.ignore_patterns)
 
     def clone_repo(self, url: str) -> Path:
         """Clone a repository from URL to temporary directory.
@@ -98,6 +113,14 @@ class RepoConverter:
         if not repo_path.exists():
             raise FileNotFoundError(f"Repository path {repo_path} does not exist")
 
+        context = []
+
+        # Get structure of the repository
+        tree_structure = self.structure.create_tree_structure(repo_path)
+        if tree_structure:
+            context.append(tree_structure)
+
+        # Get all files in the repository
         with logging_redirect_tqdm():
             file_paths = [
                 (str(p), str(repo_path))
@@ -105,7 +128,7 @@ class RepoConverter:
                 if self._is_valid_file(p)
             ]
 
-        context = []
+        # Process files in parallel
         with Pool(self.max_workers) as pool:
             with logging_redirect_tqdm():
                 with tqdm(

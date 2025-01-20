@@ -31,6 +31,9 @@ def should_ignore(path: Path, ignore_patterns: list[str]) -> bool:
     Returns:
         True if path should be ignored
     """
+    if not isinstance(path, Path):
+        path = Path(path)
+
     fname = path.name
     path_str = str(path)
     relative_path = get_relative_path(path)

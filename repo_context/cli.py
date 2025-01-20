@@ -3,7 +3,7 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
 from pathlib import Path
 from urllib.parse import urlparse
 
-from repo_context.repo_converter import RepoConverter
+from repo_context.converter import RepoConverter
 
 logger = logging.getLogger("repo_context.cli")
 
@@ -60,18 +60,27 @@ def main():
     converter = RepoConverter(ignore_patterns=ignore_patterns)
 
     try:
+        # Clone or use local repository
         if urlparse(args.source).scheme:
             logger.info(f"Cloning repository from {args.source}")
             repo_path, _ = converter.clone_repo(args.source)
         else:
             repo_path = Path(args.source)
 
+        # Convert repository to context
         context = converter.convert(repo_path, max_file_lines=args.max_file_lines)
+        fname = repo_path.stem
 
-        for i, c in enumerate(context):
-            output_path = Path(f"{args.output}/context_{i}.md")
-            output_path.write_text(c)
+        # Write context to files
+        if len(context) == 1:
+            output_path = Path(f"{args.output}/{fname}.md")
+            output_path.write_text(context[0])
             logger.info(f"Context written to {output_path}")
+        else:
+            for i, c in enumerate(context):
+                output_path = Path(f"{args.output}/{fname}_{i}.md")
+                output_path.write_text(c)
+                logger.info(f"Context written to {output_path}")
 
     except Exception as e:
         logger.error(f"Error: {e}")
