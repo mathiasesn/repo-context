@@ -1,6 +1,5 @@
 import logging
 import tempfile
-from fnmatch import fnmatch
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
@@ -9,6 +8,8 @@ from tqdm.auto import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from repo_context.ignore import EXTENSIONS, FILES, PATTERNS
+from repo_context.utils import should_ignore
+from repo_context.structure import RepoStructure
 
 logger = logging.getLogger("repo_context.repo_converter")
 
@@ -20,11 +21,25 @@ class RepoConverter:
         max_file_size: int = 1_000_000,
         max_workers: int | None = None,
     ) -> None:
+        """
+        Initialize the converter with specified parameters.
+
+        Args:
+            ignore_patterns (list[str] | None, optional): A list of patterns to ignore. Defaults to None.
+            max_file_size (int, optional): The maximum file size to process in bytes. Defaults to 1,000,000.
+            max_workers (int | None, optional): The maximum number of worker threads to use. Defaults to the number of CPU cores.
+
+        Attributes:
+            ignore_patterns (list[str]): The list of patterns to ignore.
+            max_file_size (int): The maximum file size to process in bytes.
+            max_workers (int): The maximum number of worker threads to use.
+            structure (RepoStructure): The repository structure initialized with the ignore patterns.
+        """
         self.ignore_patterns = ignore_patterns or []
         self.max_file_size = max_file_size
         self.max_workers = max_workers or cpu_count()
-
         self.ignore_patterns += FILES + EXTENSIONS + PATTERNS
+        self.structure = RepoStructure(ignore_patterns=self.ignore_patterns)
 
     def clone_repo(self, url: str) -> Path:
         """Clone a repository from URL to temporary directory.
@@ -68,57 +83,6 @@ class RepoConverter:
             logger.error(f"Failed to clone repository: {e}")
             raise
 
-    def should_ignore(self, path: Path) -> bool:
-        """Check if path matches ignore patterns.
-
-        Args:
-            path: Path to check against ignore patterns
-
-        Returns:
-            True if path should be ignored
-        """
-        fname = path.name
-        path_str = str(path)
-        relative_path = self._get_relative_path(path)
-
-        for pattern in self.ignore_patterns:
-            if pattern in FILES and fname == pattern:
-                return True
-
-            if pattern in EXTENSIONS and fnmatch(fname, pattern):
-                return True
-
-            if pattern in PATTERNS:
-                if pattern in path_str:
-                    return True
-
-                normalized_path = relative_path.replace("\\", "/")
-                normalized_pattern = pattern.replace("\\", "/")
-                if fnmatch(normalized_path, normalized_pattern):
-                    return True
-
-            if fnmatch(path_str, pattern):
-                return True
-
-        return False
-
-    @staticmethod
-    def _get_relative_path(path: Path) -> str:
-        """
-        Get the relative path of the given Path object with respect to the current working directory.
-
-        Args:
-            path (Path): The Path object to be converted to a relative path.
-
-        Returns:
-            str: The relative path as a string if the given path is within the current working directory,
-                 otherwise the absolute path as a string.
-        """
-        try:
-            return str(path.resolve().relative_to(Path.cwd()))
-        except ValueError:
-            return str(path)
-
     def _process_file_wrapper(self, args: tuple[str, str]) -> str | None:
         """
         Wrapper method to process a file with given file path and repository path.
@@ -149,6 +113,14 @@ class RepoConverter:
         if not repo_path.exists():
             raise FileNotFoundError(f"Repository path {repo_path} does not exist")
 
+        context = []
+
+        # Get structure of the repository
+        tree_structure = self.structure.create_tree_structure(repo_path)
+        if tree_structure:
+            context.append(tree_structure)
+
+        # Get all files in the repository
         with logging_redirect_tqdm():
             file_paths = [
                 (str(p), str(repo_path))
@@ -156,7 +128,7 @@ class RepoConverter:
                 if self._is_valid_file(p)
             ]
 
-        context = []
+        # Process files in parallel
         with Pool(self.max_workers) as pool:
             with logging_redirect_tqdm():
                 with tqdm(
@@ -182,7 +154,7 @@ class RepoConverter:
         """Check if file should be processed."""
         return (
             path.is_file()
-            and not self.should_ignore(path)
+            and not should_ignore(path, self.ignore_patterns)
             and path.stat().st_size <= self.max_file_size
         )
 

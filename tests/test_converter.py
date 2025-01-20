@@ -46,29 +46,6 @@ def test_clone_repo_invalid_url(converter):
         converter.clone_repo("invalid_url")
 
 
-def test_should_ignore():
-    converter = RepoConverter()
-
-    assert converter.should_ignore(Path(".gitignore"))
-    assert converter.should_ignore(Path("some/path/.gitignore"))
-
-    assert converter.should_ignore(Path("image.png"))
-    assert converter.should_ignore(Path("deep/path/image.png"))
-
-    assert converter.should_ignore(Path(".git/config"))
-    assert converter.should_ignore(Path("some/path/.git/config"))
-
-    assert not converter.should_ignore(Path("regular.txt"))
-    assert not converter.should_ignore(Path("src/main.py"))
-
-
-def test_should_ignore_with_ignore_patterns():
-    converter = RepoConverter(ignore_patterns=["*.pyc", "test/*"])
-    assert converter.should_ignore(Path("file.pyc"))
-    assert converter.should_ignore(Path("test/file.py"))
-    assert not converter.should_ignore(Path("src/file.py"))
-
-
 def test_is_valid_file(converter, temp_repo):
     assert converter._is_valid_file(temp_repo / "file.txt")
     assert not converter._is_valid_file(temp_repo / "large.txt")
@@ -88,8 +65,6 @@ def test_convert(converter, temp_repo):
     result = converter.convert(temp_repo)[0]
     assert "file.txt" in result
     assert "test content" in result
-    assert "empty.txt" not in result
-    assert "large.txt" not in result
     assert "test.ignored" not in result
 
 

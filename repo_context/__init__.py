@@ -14,6 +14,7 @@ logging.basicConfig(
     handlers=[RichHandler(console=console, rich_tracebacks=True)],
 )
 
-from repo_context.repo_converter import RepoConverter  # noqa: E402
+from repo_context.converter import RepoConverter  # noqa: E402
+from repo_context.structure import RepoStructure  # noqa: E402
 
-__all__ = ["RepoConverter"]
+__all__ = ["RepoConverter", "RepoStructure"]
