@@ -1,6 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "repo-context"
-version = "0.3.0"
+version = "0.4.0"
 description = "Convert Git repositories into LLM-friendly context format"
 authors = [{ name = "Mathias Nielsen", email = "mathiasesn1@gmail.com" }]
 maintainers = [{ name = "Mathias Nielsen", email = "mathiasesn1@gmail.com" }]
@@ -9,7 +13,9 @@ license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = [
     "gitpython>=3.1.43",
+    "markdownify>=0.14.1",
     "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
     "rich>=13.9.4",
     "tqdm>=4.67.1",
 ]
@@ -23,7 +29,3 @@ dev-dependencies = [
 
 [project.scripts]
 repo-context = "repo_context.cli:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
