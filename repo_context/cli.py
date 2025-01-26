@@ -42,6 +42,11 @@ def parse_args() -> Namespace:
         default=None,
         help="Maximum number of lines in context files",
     )
+    parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Convert a webpage instead of a repository",
+    )
     args = parser.parse_args()
     return args
 
@@ -49,6 +54,23 @@ def parse_args() -> Namespace:
 def main():
     # Parse arguments
     args = parse_args()
+
+    if args.web:
+        from repo_context.webpage import Webpage
+
+        # Create the webpage converter and get markdown
+        webpage = Webpage()
+        context = webpage.get_markdown(args.source)
+
+        # Get the filename from the URL
+        fname = urlparse(args.source).path.strip("/").replace("/", "-")
+
+        # Write context to file
+        output_path = Path(f"{args.output}/{fname}.md")
+        output_path.write_text(context)
+
+        logger.info(f"Context written to {output_path}")
+        return
 
     # Concat ignore patterns
     ignore_patterns = args.ignore.copy() if args.ignore else []
